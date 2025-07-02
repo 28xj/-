@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>材料領用登記</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    input, select, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 10px 0;
+      width: 80%;
+    }
+    img.logo {
+      width: 100px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <img class="logo" src="https://28xj.github.io/hair-ratio-calculator/logo.png" alt="Logo">
+  <h2>材料領用登記</h2>
+
+  <form id="form">
+    <label>掃描條碼：</label><br>
+    <input type="text" id="barcode" placeholder="請掃描或輸入條碼"><br>
+
+    <label>選擇員工：</label><br>
+    <select id="staff">
+      <option value="">請選擇</option>
+      <option>吳涵傑</option>
+      <option>黃慧玲</option>
+      <option>浦仲豪</option>
+      <option>李宜綸</option>
+      <option>嚴儀倢</option>
+    </select><br>
+
+    <label>輸入數量：</label><br>
+    <input type="number" id="quantity" placeholder="請輸入領用數量"><br>
+
+    <button type="submit">送出</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    document.getElementById('form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const barcode = document.getElementById('barcode').value;
+      const staff = document.getElementById('staff').value;
+      const quantity = document.getElementById('quantity').value;
+      const timestamp = new Date().toLocaleString("zh-TW");
+
+      if (!barcode || !staff || !quantity) {
+        document.getElementById('status').innerText = '請完整填寫所有欄位';
+        return;
+      }
+
+      // 寫入 Google Sheets 的網址（請用 Apps Script 產出）
+      const url = 'https://script.google.com/macros/s/你的網址/exec';
+
+      fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barcode, staff, quantity, timestamp })
+      });
+
+      document.getElementById('status').innerText = '已送出！';
+      document.getElementById('form').reset();
+    });
+  </script>
+</body>
+</html>
