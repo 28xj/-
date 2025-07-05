@@ -1,105 +1,150 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>材料領用紀錄</title>
+  <title>服務時間計算器</title>
   <style>
     body {
-      background-color: black;
-      color: white;
-      font-family: "新細明體", PMingLiU, serif;
+      background-color: #000;
+      color: #fff;
       font-size: 12px;
+      font-family: sans-serif;
       padding: 20px;
     }
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
-      text-align: center;
-    }
-    label, select, input, button, textarea {
+    label, select, input {
       display: block;
-      margin: 10px auto;
+      margin-bottom: 10px;
+    }
+    select, input {
+      background-color: #333;
+      color: #fff;
+      border: none;
+      padding: 5px;
+    }
+    .output {
+      margin-top: 20px;
+      border-top: 1px solid #555;
+      padding-top: 10px;
+    }
+    table {
       width: 100%;
-      font-size: 12px;
+      border-collapse: collapse;
+      margin-top: 10px;
     }
-    textarea {
-      resize: vertical;
-    }
-    img.logo {
-      width: 100px;
-      margin: 10px auto;
-      display: block;
+    th, td {
+      border: 1px solid #555;
+      padding: 5px;
+      text-align: left;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="logo.png" alt="LOGO" class="logo">
-    <h2>材料領用紀錄表單</h2>
-    <form id="materialForm">
-      <label for="employee">員工姓名</label>
-      <select id="employee" name="employee" required>
-        <option value="">請選擇</option>
-        <option>公司</option>
-        <option>吳涵傑</option>
-        <option>黃慧玲</option>
-        <option>浦仲豪</option>
-        <option>李宜綸</option>
-        <option>嚴儀倢</option>
-        <option>何芯瑀</option>
-        <option>張涵雅</option>
-        <option>林俐安</option>
-        <option>彭佳琳</option>
-        <option>魏辰芬</option>
-        <option>陳琬琳</option>
-        <option>田采璇</option>
-        <option>楊汶淩</option>
-        <option>林亞璍</option>
-        <option>吳順慧</option>
-      </select>
 
-      <label for="barcode">掃描條碼</label>
-      <input type="text" id="barcode" name="barcode" required placeholder="請掃描條碼">
+  <label for="service">服務項目：</label>
+  <select id="service">
+    <option value="perm">燙髮（捲）</option>
+    <option value="combo">縮毛矯正+燙髮（捲）</option>
+    <option value="straight">縮毛矯正</option>
+  </select>
 
-      <label for="quantity">數量</label>
-      <input type="number" id="quantity" name="quantity" min="1" required>
+  <label for="startTime">顧客幾點到（HH:mm）：</label>
+  <input type="time" id="startTime">
 
-      <label for="note">備註</label>
-      <textarea id="note" name="note" rows="2" placeholder="可填寫額外說明"></textarea>
+  <label for="duration">你希望多久結束（小時制）：</label>
+  <input type="number" id="duration" step="0.5" min="2.5">
 
-      <button type="submit">送出</button>
-    </form>
-    <p id="status"></p>
-  </div>
+  <div class="output" id="result"></div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbypRKUnwjXrDZlpxwWGzvUAf3Oj-cw3TyuCjxZqwKlxxSvdvaKD7nG9pK1LL966Z9d0/exec';
-    const form = document.getElementById('materialForm');
-    const status = document.getElementById('status');
+    const serviceSteps = {
+      perm: [
+        { name: "討論", minutes: 10 },
+        { name: "剪髮", minutes: 15 },
+        { name: "上藥", minutes: 60 },
+        { name: "上捲", minutes: 15 },
+        { name: "加熱", minutes: 20 },
+        { name: "冷卻", minutes: 5 },
+        { name: "二劑", minutes: 8 },
+        { name: "吹乾", minutes: 15 },
+        { name: "可耽誤", minutes: 2 }
+      ],
+      combo: [
+        { name: "討論", minutes: 10 },
+        { name: "剪髮", minutes: 15 },
+        { name: "上藥", minutes: 60 },
+        { name: "縮毛矯正", minutes: 30 },
+        { name: "上捲", minutes: 15 },
+        { name: "加熱", minutes: 20 },
+        { name: "冷卻", minutes: 5 },
+        { name: "二劑", minutes: 8 },
+        { name: "吹乾", minutes: 15 },
+        { name: "可耽誤", minutes: 2 }
+      ],
+      straight: [
+        { name: "討論", minutes: 10 },
+        { name: "剪髮", minutes: 15 },
+        { name: "上藥", minutes: 60 },
+        { name: "縮毛矯正", minutes: 40 },
+        { name: "二劑", minutes: 8 },
+        { name: "吹乾", minutes: 15 },
+        { name: "可耽誤", minutes: 2 }
+      ]
+    };
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const data = new FormData(form);
-      data.append("timestamp", new Date().toLocaleString("sv-SE"));
-
-      fetch(scriptURL, { method: 'POST', body: data })
-        .then(response => {
-          status.innerHTML = "已成功送出！";
-          form.reset();
-        })
-        .catch(error => {
-          status.innerHTML = "送出失敗，請稍後再試。";
-          console.error('Error!', error.message);
-        });
-    });
-
-    // 啟用相機掃碼（需 HTTPS 網域才支援）
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      console.log("此裝置支援相機功能，可結合掃碼程式使用");
-    } else {
-      console.warn("此裝置無法使用相機");
+    function addMinutesToTime(timeStr, minutesToAdd) {
+      const [h, m] = timeStr.split(":").map(Number);
+      const date = new Date();
+      date.setHours(h, m + minutesToAdd);
+      return date.toTimeString().slice(0, 5);
     }
+
+    document.querySelectorAll("#service, #startTime, #duration").forEach(el =>
+      el.addEventListener("input", () => {
+        const service = document.getElementById("service").value;
+        const startTime = document.getElementById("startTime").value;
+        const duration = parseFloat(document.getElementById("duration").value);
+
+        if (!startTime || isNaN(duration)) {
+          document.getElementById("result").innerHTML = '';
+          return;
+        }
+
+        const minDuration = service === "combo" ? 3 : 2.5;
+        const steps = serviceSteps[service];
+        const totalMinutes = steps.reduce((sum, step) => sum + step.minutes, 0);
+        const requiredHours = totalMinutes / 60;
+
+        if (duration < minDuration) {
+          document.getElementById("result").innerHTML = `<p style="color:red;">❗ 此服務至少需要 ${minDuration} 小時，請調整。</p>`;
+          return;
+        }
+
+        if (duration < requiredHours) {
+          document.getElementById("result").innerHTML = `<p style="color:red;">❗ 時間不足，請延長服務時間（至少 ${requiredHours.toFixed(1)} 小時）</p>`;
+          return;
+        }
+
+        let timeTracker = startTime;
+        let rows = steps.map(step => {
+          const thisStart = timeTracker;
+          timeTracker = addMinutesToTime(timeTracker, step.minutes);
+          return `<tr><td>${step.name}</td><td>${step.minutes} 分</td><td>${thisStart}</td></tr>`;
+        });
+
+        const endTime = addMinutesToTime(startTime, duration * 60);
+        const table = `
+          <p>預計結束時間：<strong>${endTime}</strong></p>
+          <table>
+            <thead><tr><th>環節</th><th>所需時間</th><th>開始時間</th></tr></thead>
+            <tbody>${rows.join('')}</tbody>
+          </table>
+        `;
+
+        document.getElementById("result").innerHTML = table;
+      })
+    );
   </script>
 </body>
 </html>
+
+
